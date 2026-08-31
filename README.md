@@ -381,5 +381,4 @@ chronos/
 - [x] Code repository (public)
 - [x] Spin-up instructions (README + DEPLOY.md)
 - [x] Architecture diagram (Mermaid in README + `docs/architecture.md`)
-- [x] 4-minute demo video (script: `docs/demo-video-script.md`)
 - [x] Google Cloud Console screenshot in demo (Cloud Run dashboard or `gcloud run services list`)# chronos
