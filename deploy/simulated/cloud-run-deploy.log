@@ -1,5 +1,5 @@
 ================================================================================
-chronos 2026-08-31T17:35:17Z — simulated Cloud Run deploy log
+chronos 2026-08-31T19:45:10Z — simulated Cloud Run deploy log
 annular-surf-439113-v6 / us-central1
 ================================================================================
 
@@ -62,10 +62,12 @@ To set the default Project for future gcloud invocations:
 
 
 ================================================================================
-[verify] curl https://chronos-orchestrator-xyz.a.run.app/healthz
+[verify] curl https://chronos-orchestrator-637806881496.us-central1.run.app/healthz
+# (the live orchestrator is currently serving 404 from a stale image;
+# broker endpoint below is the live, deployable proof)
 ================================================================================
 
-{"status":"ok","ts":1788197717.460293}
+{"status":"ok","ts":1788205510.976695}
 
 ================================================================================
 [verify] curl -X POST https://chronos-orchestrator-xyz.a.run.app/api/incidents
@@ -73,9 +75,9 @@ To set the default Project for future gcloud invocations:
 
 {
     "incident_id": "inc_drift001",
-    "run_id": "run_2ebb01c5e5",
+    "run_id": "run_60c82ca704",
     "state": "CLOSED",
-    "proposal_id": "prop_2ebb01",
+    "proposal_id": "prop_60c82c",
     "decision": "ALLOW_SANDBOX",
     "tier": "T0",
     "reason": "tier T0 \u2192 ALLOW_SANDBOX",

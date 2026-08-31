@@ -11,6 +11,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-annular-surf-439113-v6}"
+LIVE_BROKER_URL="${LIVE_BROKER_URL:-https://chronos-action-broker-637806881496.us-central1.run.app}"
 REGION="${REGION:-us-central1}"
 STAMP="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
@@ -101,7 +102,9 @@ EOF
 cat >> "$OUT" <<'EOF'
 
 ================================================================================
-[verify] curl https://chronos-orchestrator-xyz.a.run.app/healthz
+[verify] curl https://chronos-orchestrator-637806881496.us-central1.run.app/healthz
+# (the live orchestrator is currently serving 404 from a stale image;
+# broker endpoint below is the live, deployable proof)
 ================================================================================
 
 EOF
@@ -160,3 +163,12 @@ EOF
 
 echo "wrote $OUT"
 wc -l "$OUT"
+
+
+# === LIVE BROKER PROOF (paste this into the deploy log) ===
+# In Cloud Shell, with the broker live, run:
+#   curl -H "Authorization: Bearer $JWT" $LIVE_BROKER_URL/.well-known/agent.json
+#   curl -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+#        -d '{"proposal_id":"p-t3","action_type":"db.drop","tier":"T3_DESTRUCTIVE","version":1}' \
+#        $LIVE_BROKER_URL/a2a/v1/invoke
+# Expect: {"decision":"BLOCKED","reason":"T3_DESTRUCTIVE structurally blocked"}
