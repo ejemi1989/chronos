@@ -1,26 +1,30 @@
-# Chronos Dockerfile — multi-stage: builder + runtime
-FROM python:3.11-slim AS builder
+# Chronos orchestrator — single-stage, simple, debuggable.
+# Use this when the multi-stage build silently loses packages.
+
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY apps/orchestrator/requirements.txt .
+
+# System deps (none required for chronos, but keep build minimal)
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install Python deps
+COPY apps/orchestrator/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.11-slim
-WORKDIR /app
-
-# Copy installed packages from the builder stage
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Copy the source tree
+# Copy source
 COPY contracts/ ./contracts/
 COPY apps/ ./apps/
 
+# Pre-flight: verify imports work BEFORE the CMD runs.
+# If this prints OK, uvicorn will start. If it crashes, the error is captured.
+RUN python -c "import sys; sys.path.insert(0, '/app'); from apps.orchestrator.api import app; print('IMPORT OK:', app)"
+
 ENV PYTHONUNBUFFERED=1 \
-    GOOGLE_CLOUD_PROJECT=${PROJECT_ID} \
-    VERTEX_AI_LOCATION=us-central1 \
-    CHRONOS_API_PORT=8080 \
+    PYTHONPATH=/app \
     PORT=8080
 
 EXPOSE 8080
-CMD ["uvicorn", "apps.orchestrator.api:app", "--host", "0.0.0.0", "--port", "8080"]
+
+# Wrap uvicorn in a shell so we see any startup error before uvicorn takes over.
+CMD ["sh", "-c", "python -c 'import sys; sys.path.insert(0, \"/app\"); from apps.orchestrator.api import app; print(\"START OK\", flush=True)' && exec uvicorn apps.orchestrator.api:app --host 0.0.0.0 --port 8080 --log-level debug"]
