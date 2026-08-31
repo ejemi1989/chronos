@@ -125,7 +125,8 @@ func recentMem() []memEntry {
 func main() {
 	reg := registry.Load(defaultRegistry())
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("GET /healthz from=%s ua=%q", r.RemoteAddr, r.UserAgent())
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	})
@@ -156,8 +157,10 @@ func main() {
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+	// Root path returns health so liveness probes work without a bundled dashboard.
+	if r.URL.Path == "/" || r.URL.Path == "/healthz" {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok\n"))
 		return
 	}
 	// Try the on-disk dashboard, then the embedded sibling location.
@@ -171,7 +174,7 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	http.Error(w, "dashboard not found", http.StatusNotFound)
+	http.NotFound(w, r)
 }
 
 func agentCard() map[string]any {
