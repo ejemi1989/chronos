@@ -1,0 +1,20 @@
+# Chronos orchestrator (GEAP Interactions API)
+#
+# Per the Gemini Interactions API skill spec:
+#   - Use google-genai >= 2.3.0 (verified: 2.20.0).
+#   - Legacy SDKs (google-cloud-aiplatform, google-generativeai, @google-cloud/vertexai)
+#     are STRICTLY UNSUPPORTED for the Interactions API.
+#   - GEAP requires a provisioned agent — no direct base-model calls yet.
+
+google-genai>=2.3.0
+google-adk>=1.0.0  # optional; retained for SessionService / MemoryBank wiring
+firebase-admin>=6.5.0
+google-cloud-firestore>=2.19.0
+google-cloud-pubsub>=2.21.0
+google-cloud-modelarmor>=0.1.0
+pydantic>=2.8
+httpx>=0.27
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pytest>=8.0
+pytest-asyncio>=0.23

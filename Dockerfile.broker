@@ -1,0 +1,14 @@
+# Chronos Go Action Broker — multi-stage build
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /src
+COPY services/action-broker-go/ .
+RUN go build -o /out/action-broker ./cmd/server
+
+FROM alpine:3.19
+RUN adduser -D -u 10001 chronos
+USER chronos
+COPY --from=builder /out/action-broker /usr/local/bin/action-broker
+
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/action-broker"]

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronos.dev/schemas/policy-decision.schema.json",
+  "title": "PolicyDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proposal_id", "status", "tier", "timestamp"],
+  "properties": {
+    "proposal_id": { "type": "string", "pattern": "^prop_[A-Za-z0-9]{6,}$" },
+    "status": {
+      "type": "string",
+      "enum": ["ALLOW_SANDBOX", "REQUIRE_APPROVAL", "BLOCKED"]
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T0", "T1", "T2", "T3"]
+    },
+    "reason": { "type": "string", "maxLength": 500 },
+    "timestamp": { "type": "number", "minimum": 0 },
+    "approver": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "ledger_seq": { "type": "integer", "minimum": 0 }
+  }
+}

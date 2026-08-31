@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronos.dev/schemas/incident.schema.json",
+  "title": "Incident",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["incident_id", "pipeline_id", "error_log", "context", "detected_at"],
+  "properties": {
+    "incident_id":  { "type": "string", "pattern": "^inc_[A-Za-z0-9]{6,}$" },
+    "pipeline_id":  { "type": "string", "pattern": "^pipe_[A-Za-z0-9]{4,}$" },
+    "error_log":    { "type": "string", "minLength": 1, "maxLength": 65536 },
+    "context":      { "type": "object", "additionalProperties": true },
+    "detected_at":  { "type": "number", "minimum": 0 }
+  }
+}

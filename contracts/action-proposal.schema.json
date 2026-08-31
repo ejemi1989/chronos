@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronos.dev/schemas/action-proposal.schema.json",
+  "title": "ActionProposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id", "incident_id", "proposed_by",
+    "action", "target", "reversible", "financial_impact",
+    "rollback", "success_criteria"
+  ],
+  "properties": {
+    "proposal_id":      { "type": "string", "pattern": "^prop_[A-Za-z0-9]{6,}$" },
+    "incident_id":      { "type": "string", "pattern": "^inc_[A-Za-z0-9]{6,}$" },
+    "proposed_by":      { "type": "string", "minLength": 1, "maxLength": 128 },
+    "round":            { "type": "integer", "minimum": 1, "maximum": 3 },
+    "action": {
+      "type": "string",
+      "enum": [
+        "ROLLBACK_SCHEMA",
+        "REPLAY_BATCH",
+        "ROTATE_TOKEN",
+        "DELETE_DATA",
+        "ALTER_PRODUCTION_SCHEMA"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+    },
+    "reversible":       { "type": "boolean" },
+    "financial_impact": { "type": "integer", "minimum": 0, "maximum": 1000000000 },
+    "rollback":         { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "success_criteria": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "rationale":        { "type": "string", "minLength": 1, "maxLength": 4000 }
+  },
+  "allOf": [
+    {
+      "description": "DELETE_DATA and ALTER_PRODUCTION_SCHEMA are FORBIDDEN in any proposal — broker structurally blocks these",
+      "not": {
+        "properties": {
+          "action": { "enum": ["DELETE_DATA", "ALTER_PRODUCTION_SCHEMA"] }
+        },
+        "required": ["action"]
+      }
+    }
+  ]
+}

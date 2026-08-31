@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chronos — Governed Incident Remediation</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #131720;
+      --panel-2: #1a2030;
+      --text: #e6ebf2;
+      --muted: #8b94a7;
+      --accent: #7c5cff;
+      --safe: #46d39a;
+      --warn: #f0b400;
+      --bad:  #ff5d6c;
+      --border: #232a39;
+      --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: conic-gradient(from 200deg, var(--accent), #4ec5ff, var(--accent));
+      box-shadow: 0 0 24px rgba(124,92,255,.35);
+    }
+    h1 { font-size: 18px; font-weight: 600; letter-spacing: .2px; margin: 0; }
+    .subtitle { font-size: 12px; color: var(--muted); }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      padding: 20px 28px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .panel h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    /* Form */
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .88; }
+    button.secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.danger { background: var(--bad); }
+
+    /* Pipeline */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .step {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      position: relative;
+      font-size: 12px;
+    }
+    .step .num {
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .step .name { margin-top: 4px; font-weight: 600; }
+    .step.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .step.ok    { border-color: var(--safe); }
+    .step.bad   { border-color: var(--bad); }
+    .step .arrow {
+      position: absolute;
+      right: -8px; top: 50%; transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .step:last-child .arrow { display: none; }
+
+    /* Verdict + log */
+    .verdict {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 14px;
+      margin-top: 14px;
+    }
+    .verdict.allow   { background: rgba(70,211,154,.10); border: 1px solid var(--safe); color: var(--safe); }
+    .verdict.approval{ background: rgba(240,180,0,.10);  border: 1px solid var(--warn); color: var(--warn); }
+    .verdict.block   { background: rgba(255,93,108,.10); border: 1px solid var(--bad);  color: var(--bad); }
+
+    .log {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      max-height: 320px;
+      overflow: auto;
+      background: #0a0d12;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+    .log .k { color: var(--accent); }
+    .log .s { color: var(--safe); }
+    .log .w { color: var(--warn); }
+    .log .e { color: var(--bad); }
+
+    .ledger-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 130px 90px;
+      gap: 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      align-items: center;
+    }
+    .ledger-row:last-child { border-bottom: 0; }
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .pill.allow { color: var(--safe); border-color: var(--safe); }
+    .pill.approval { color: var(--warn); border-color: var(--warn); }
+    .pill.block { color: var(--bad); border-color: var(--bad); }
+
+    footer {
+      padding: 16px 28px 28px;
+      color: var(--muted);
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+    code {
+      font-family: var(--mono);
+      background: var(--panel-2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Chronos</h1>
+        <div class="subtitle">Governed Incident-Remediation Control Plane</div>
+      </div>
+    </div>
+    <div>
+      <span class="badge">ADK · A2A · Firestore</span>
+      &nbsp;
+      <span class="badge" id="health">broker: …</span>
+    </div>
+  </div>
+
+  <main>
+    <aside class="panel">
+      <h2>Inject Proposal</h2>
+      <label>Action type</label>
+      <input id="action_type" value="cache.flush" />
+      <label>Tier</label>
+      <select id="tier">
+        <option value="T1_SAFE">T1_SAFE (ALLOW_SANDBOX)</option>
+        <option value="T2_REVERSIBLE">T2_REVERSIBLE (REQUIRE_APPROVAL)</option>
+        <option value="T3_DESTRUCTIVE">T3_DESTRUCTIVE (BLOCKED)</option>
+      </select>
+      <label>Registry version</label>
+      <input id="version" type="number" value="1" min="1" />
+      <button id="submit">Submit to Broker</button>
+      <br><br>
+      <button class="secondary" id="load_ledger">Refresh Ledger</button>
+    </aside>
+
+    <section>
+      <div class="panel">
+        <h2>Decision Pipeline</h2>
+        <div class="pipeline" id="pipeline">
+          <div class="step" data-step="1"><div class="num">01</div><div class="name">Detection</div><div class="arrow">›</div></div>
+          <div class="step" data-step="2"><div class="num">02</div><div class="name">Propose</div><div class="arrow">›</div></div>
+          <div class="step" data-step="3"><div class="num">03</div><div class="name">Audit</div><div class="arrow">›</div></div>
+          <div class="step" data-step="4"><div class="num">04</div><div class="name">Broker</div><div class="arrow">›</div></div>
+          <div class="step" data-step="5"><div class="num">05</div><div class="name">Ledger</div></div>
+        </div>
+        <div id="verdict" class="verdict" style="display:none"></div>
+      </div>
+
+      <br>
+
+      <div class="panel">
+        <h2>Live Trace</h2>
+        <div id="log" class="log"></div>
+      </div>
+
+      <br>
+
+      <div class="panel">
+        <h2>Tamper-Evident Ledger (latest 12)</h2>
+        <div id="ledger">
+          <div class="ledger-row" style="color:var(--muted)">no entries yet — submit a proposal</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Chronos · Proposal → Debate → Policy → Ledger · T3 destructive actions are <span style="color:var(--bad)">structurally unreachable</span>
+  </footer>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const logEl = $("#log");
+    const ledgerEl = $("#ledger");
+    const verdictEl = $("#verdict");
+    const pipelineEl = $("#pipeline");
+
+    const COLOR = { ALLOW_SANDBOX: "allow", REQUIRE_APPROVAL: "approval", BLOCKED: "block" };
+    const SYMBOL = { ALLOW_SANDBOX: "✓", REQUIRE_APPROVAL: "⏸", BLOCKED: "✕" };
+
+    function setStep(n, kind) {
+      pipelineEl.querySelectorAll(".step").forEach((el) => {
+        const step = parseInt(el.dataset.step, 10);
+        el.classList.remove("active", "ok", "bad");
+        if (step < n) el.classList.add("ok");
+        else if (step === n) el.classList.add(kind || "active");
+      });
+    }
+    function resetSteps() { pipelineEl.querySelectorAll(".step").forEach((el) => el.classList.remove("active","ok","bad")); }
+    function log(line, kind) {
+      const span = document.createElement("div");
+      if (kind) span.innerHTML = `<span class="${kind}">${line}</span>`;
+      else span.textContent = line;
+      logEl.appendChild(span);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function ping() {
+      try {
+        const r = await fetch("/healthz");
+        $("#health").textContent = r.ok ? "broker: ok" : "broker: down";
+      } catch (e) {
+        $("#health").textContent = "broker: offline";
+      }
+    }
+
+    async function loadLedger() {
+      try {
+        const r = await fetch("/ledger/recent");
+        const rows = await r.json();
+        if (!rows.length) {
+          ledgerEl.innerHTML = '<div class="ledger-row" style="color:var(--muted)">no entries yet — submit a proposal</div>';
+          return;
+        }
+        ledgerEl.innerHTML = "";
+        for (const e of rows) {
+          const cls = COLOR[e.decision] || "";
+          const row = document.createElement("div");
+          row.className = "ledger-row";
+          row.innerHTML = `
+            <div>#${e.seq}</div>
+            <div title="${e.entry_hash}">${e.action_type} <span style="color:var(--muted)">· ${e.actor}</span></div>
+            <div><span class="pill ${cls}">${e.decision}</span></div>
+            <div style="color:var(--muted)">${e.proposal_id}</div>`;
+          ledgerEl.appendChild(row);
+        }
+      } catch (e) {
+        log("ledger fetch failed: " + e.message, "e");
+      }
+    }
+
+    async function submit() {
+      const action = $("#action_type").value.trim();
+      const tier = $("#tier").value;
+      const version = parseInt($("#version").value, 10);
+      const proposal_id = "p-" + Math.random().toString(36).slice(2, 9);
+
+      logEl.innerHTML = "";
+      verdictEl.style.display = "none";
+      resetSteps();
+
+      log(`> proposal_id=${proposal_id} action=${action} tier=${tier} version=${version}`, "k");
+      setStep(1, "active"); await sleep(120);
+      setStep(2, "active"); await sleep(120);
+      setStep(3, "active"); await sleep(120);
+      setStep(4, "active");
+
+      try {
+        const r = await fetch("/a2a/v1/invoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer dev-token" },
+          body: JSON.stringify({ proposal_id, action_type: action, tier, version }),
+        });
+        const body = await r.json();
+        const cls = COLOR[body.decision] || "";
+        log(`broker: decision=${body.decision} reason="${body.reason}"`, cls === "block" ? "e" : (cls === "approval" ? "w" : "s"));
+        verdictEl.className = "verdict " + cls;
+        verdictEl.style.display = "flex";
+        verdictEl.innerHTML = `<div style="font-size:18px">${SYMBOL[body.decision] || "?"}</div>
+          <div><div style="font-weight:700">${body.decision}</div>
+          <div style="font-size:12px;color:var(--muted)">${body.reason}</div></div>
+          <div style="margin-left:auto;font-size:11px;color:var(--muted)">${body.proposal_id}</div>`;
+        setStep(4, cls === "block" ? "bad" : "ok");
+        setStep(5, "active");
+        await loadLedger();
+        setStep(5, "ok");
+      } catch (e) {
+        log("broker unreachable: " + e.message, "e");
+        setStep(4, "bad");
+      }
+    }
+
+    function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+    $("#submit").addEventListener("click", submit);
+    $("#load_ledger").addEventListener("click", loadLedger);
+    ping(); setInterval(ping, 4000); loadLedger();
+  </script>
+</body>
+</html>

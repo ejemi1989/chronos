@@ -1,0 +1,11 @@
+{
+  "incident_id": "inc_to0001",
+  "pipeline_id": "pipe_pay001",
+  "error_log": "API timeout: GET https://api.payments.example.com/v1/charges exceeded 30000ms deadline (HTTP 504); batch 2025-08-12T03:14Z failed at offset 12000",
+  "context": {
+    "source": "payments.events",
+    "endpoint": "https://api.payments.example.com/v1/charges",
+    "first_seen": "2025-08-12T03:14:11Z"
+  },
+  "detected_at": 1723437251.0
+}

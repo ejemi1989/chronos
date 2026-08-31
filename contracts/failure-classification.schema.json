@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronos.dev/schemas/failure-classification.schema.json",
+  "title": "FailureClassification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id", "failure_type", "severity", "impact", "root_cause"
+  ],
+  "properties": {
+    "incident_id":  { "type": "string", "pattern": "^inc_[A-Za-z0-9]{6,}$" },
+    "failure_type": {
+      "type": "string",
+      "enum": ["SCHEMA_CHANGE", "API_TIMEOUT", "DATA_CORRUPTION", "NETWORK", "AUTH", "UNKNOWN"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    },
+    "impact": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{1,32}$" },
+      "minItems": 0,
+      "maxItems": 32,
+      "uniqueItems": true
+    },
+    "root_cause": { "type": "string", "minLength": 10, "maxLength": 500 },
+    "needs_human_review": { "type": "boolean" }
+  }
+}

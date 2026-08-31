@@ -1,0 +1,97 @@
+================================================================================
+chronos 2026-08-31T17:35:17Z — simulated Cloud Run deploy log
+annular-surf-439113-v6 / us-central1
+================================================================================
+
+[1/6] gcloud config get-value project
+annular-surf-439113-v6
+
+[2/6] gcloud services enable aiplatform.googleapis.com run.googleapis.com firestore.googleapis.com pubsub.googleapis.com modelarmor.googleapis.com cloudtrace.googleapis.com
+Operation "operations/acf.p2-.../operations/abc123" finished successfully.
+
+[3/6] gcloud builds submit --tag gcr.io/annular-surf-439113-v6/chronos-orchestrator:latest .
+PUSH
+DONE
+sha256:9b1deb4d3b7d...
+latest: digest: sha256:9b1deb... size: 2148
+
+[3/6] gcloud builds submit --tag gcr.io/annular-surf-439113-v6/chronos-action-broker:latest .
+PUSH
+DONE
+sha256:f2c3874e3b1a...
+latest: digest: sha256:f2c387... size: 1234
+
+[4/6] gcloud iam service-accounts create chronos-orchestrator chronos-action-broker chronos-dashboard
+Created service account [chronos-orchestrator].
+Created service account [chronos-action-broker].
+Created service account [chronos-dashboard].
+
+[5/6] gcloud firestore databases create --location=us-central1
+Operation completed successfully. Database ID: (default).
+
+[6/6] gcloud run deploy
+Deploying container to Cloud Run service [chronos-action-broker] in project [annular-surf-439113-v6], region [us-central1]
+✓ Deploying... Done.
+✓ Creating Revision... 
+✓ Routing traffic... Done.
+Service URL: https://chronos-action-broker-xyz.a.run.app
+
+Deploying container to Cloud Run service [chronos-orchestrator] in project [annular-surf-439113-v6], region [us-central1]
+✓ Deploying... Done.
+✓ Creating Revision... 
+✓ Routing traffic... Done.
+Service URL: https://chronos-orchestrator-xyz.a.run.app
+
+Deploying container to Cloud Run service [chronos-dashboard] in project [annular-surf-439113-v6], region [us-central1]
+✓ Deploying... Done.
+✓ Creating Revision... 
+✓ Routing traffic... Done.
+Service URL: https://chronos-dashboard-xyz.a.run.app
+
+================================================================================
+[verify] gcloud run services list --region=us-central1 --project=annular-surf-439113-v6
+================================================================================
+
+SERVICE                REGION       URL                                                LATEST_REVISION                                       ACTIVE
+chronos-orchestrator   us-central1  https://chronos-orchestrator-xyz.a.run.app        chronos-orchestrator-00001-abc                       yes
+chronos-action-broker  us-central1  https://chronos-action-broker-xyz.a.run.app       chronos-action-broker-00001-def                       yes
+chronos-dashboard      us-central1  https://chronos-dashboard-xyz.a.run.app           chronos-dashboard-00001-ghi                           yes
+
+To set the default Project for future gcloud invocations:
+  gcloud config set project $PROJECT_ID
+
+
+================================================================================
+[verify] curl https://chronos-orchestrator-xyz.a.run.app/healthz
+================================================================================
+
+{"status":"ok","ts":1788197717.460293}
+
+================================================================================
+[verify] curl -X POST https://chronos-orchestrator-xyz.a.run.app/api/incidents
+================================================================================
+
+{
+    "incident_id": "inc_drift001",
+    "run_id": "run_2ebb01c5e5",
+    "state": "CLOSED",
+    "proposal_id": "prop_2ebb01",
+    "decision": "ALLOW_SANDBOX",
+    "tier": "T0",
+    "reason": "tier T0 \u2192 ALLOW_SANDBOX",
+    "ledger_seq": 0
+}
+
+================================================================================
+[verify] curl https://chronos-orchestrator-xyz.a.run.app/api/ledger/verify
+================================================================================
+
+{"ok":true,"head_seq":0}
+
+================================================================================
+Deploy complete. Estimated monthly cost (idle): $0.00
+  - Scale to zero when idle (--min-instances=0 on all 3 services)
+  - 1 vCPU + 512Mi-2Gi per service, no always-on DBs
+  - Firestore + Pub/Sub on free tier under demo load
+================================================================================
+

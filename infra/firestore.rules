@@ -1,0 +1,56 @@
+rules_version = '2';
+
+// Chronos Firestore security rules.
+//
+// Threat model:
+//   - The orchestrator (Cloud Run service account) is the ONLY principal
+//     allowed to write to chronos_sessions, chronos_workflow_runs, ledger.
+//   - The dashboard is read-only.
+//   - No principal can delete or update an existing ledger entry — append
+//     only.
+//   - WorkflowRun updates are limited to advancing the FSM; the orchestrator
+//     service account holds that role.
+//   - The 'public' role has no access. There is no client-side write path.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOrchestrator() {
+      return request.auth.token.email == "chronos-orchestrator@" + request.auth.token.audience
+             || request.auth.token.chronos_role == "orchestrator";
+    }
+
+    function isDashboard() {
+      return request.auth.token.chronos_role == "dashboard";
+    }
+
+    // Ledger — append-only. No updates, no deletes, ever.
+    match /ledger/{document=**} {
+      allow read: if isOrchestrator() || isDashboard();
+      allow create: if isOrchestrator()
+                    && request.resource.data.keys().hasAll(['seq', 'previous_hash', 'entry_hash']);
+      allow update, delete: if false;
+    }
+
+    // Workflow runs — orchestrator writes; dashboard reads.
+    match /chronos_workflow_runs/{incident}/{run}/{document=**} {
+      allow read: if isOrchestrator() || isDashboard();
+      allow write: if isOrchestrator();
+    }
+
+    // ADK session store
+    match /chronos_sessions/{document=**} {
+      allow read, write: if isOrchestrator();
+    }
+
+    // Memory bank
+    match /chronos_memory/{document=**} {
+      allow read, write: if isOrchestrator();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

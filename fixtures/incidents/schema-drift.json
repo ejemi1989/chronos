@@ -1,0 +1,11 @@
+{
+  "incident_id": "inc_drift001",
+  "pipeline_id": "pipe_users001",
+  "error_log": "schema drift: upstream added column 'last_login_ip' but downstream mapping expects only 4 fields; field count mismatch caused row parse failure on batch 2025-08-12T03:14Z",
+  "context": {
+    "source": "warehouse.users",
+    "sink": "analytics.user_features",
+    "first_seen": "2025-08-12T03:14:22Z"
+  },
+  "detected_at": 1723437262.0
+}
