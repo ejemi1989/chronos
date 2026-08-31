@@ -10,12 +10,12 @@ package main
 
 import (
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -156,25 +156,22 @@ func main() {
 	}
 }
 
+//go:embed assets/index.html
+var dashboardHTML []byte
+
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
-	// Root path returns health so liveness probes work without a bundled dashboard.
-	if r.URL.Path == "/" || r.URL.Path == "/healthz" {
+	// Root path and /healthz return "ok" so liveness probes work.
+	if r.URL.Path == "/healthz" {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 		return
 	}
-	// Try the on-disk dashboard, then the embedded sibling location.
-	candidates := []string{"dashboard/index.html", "../dashboard/index.html", "../../dashboard/index.html"}
-	for _, p := range candidates {
-		if abs, err := filepath.Abs(p); err == nil {
-			if data, err := os.ReadFile(abs); err == nil {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				_, _ = w.Write(data)
-				return
-			}
-		}
-	}
-	http.NotFound(w, r)
+	// Root path serves the embedded dashboard.
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(dashboardHTML)
 }
 
 func agentCard() map[string]any {
